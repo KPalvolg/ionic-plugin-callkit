@@ -59,6 +59,7 @@
 		<config-file target="config.xml" parent="/*">
 			<feature name="CallKit">
 				<param name="ios-package" value="CDVCallKit" />
+        <param name="onload" value="true"/>
 			</feature>
 		</config-file>
 
