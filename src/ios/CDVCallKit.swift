@@ -17,7 +17,6 @@
  under the License.
  */
 import UIKit
-import UserNotifications
 
 @available(iOS 10.0, *)
 @objc(CDVCallKit) class CDVCallKit : CDVPlugin {
@@ -46,7 +45,7 @@ import UserNotifications
     }
     
     @available(iOS 10.0, *)
-    func register(_ command:CDVInvokedUrlCommand) {
+    @objc func register(_ command:CDVInvokedUrlCommand) {
         self.commandDelegate.run(inBackground: {
             var pluginResult = CDVPluginResult(
                 status : CDVCommandStatus_ERROR
@@ -105,7 +104,7 @@ import UserNotifications
         
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
         
-        let request = UNNotificationRequest(identifier: uuid.uuidString, content: content, trigger: trigger)
+        let request = UNNotificationRequest(identifier: "call" + uuid.uuidString, content: content, trigger: trigger)
         
         let center = UNUserNotificationCenter.current()
         center.add(request) { (error : Error?) in
@@ -127,7 +126,7 @@ import UserNotifications
         )
     }
     
-    func askNotificationPermission(_ command:CDVInvokedUrlCommand) {
+    @objc func askNotificationPermission(_ command:CDVInvokedUrlCommand) {
         let center = UNUserNotificationCenter.current()
         center.requestAuthorization(options: [.alert, .sound]) { (granted, error) in
             // Enable or disable features based on authorization.
@@ -183,7 +182,9 @@ import UserNotifications
                     self.callManager?.end(call!)
                 }
             }
-            UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: [uuid!.uuidString])
+            if (uuid != nil) {
+                UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: ["call" + uuid!.uuidString])
+            }
         });
     }
     
@@ -199,7 +200,9 @@ import UserNotifications
                     call?.connectedCDVCall()
                 }
             }
-            UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: [uuid!.uuidString])
+            if (uuid != nil) {
+                UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: ["call" + uuid!.uuidString])
+            }
         });
     }
     
@@ -257,7 +260,7 @@ import UserNotifications
                 if (response?.actionIdentifier == "ACCEPT_ACTION") {
                     let resultMessage = [
                         "callbackType": "callAccept",
-                        "uuid": response?.notification.request.identifier
+                        "uuid": String(describing: response?.notification.request.identifier.dropFirst(4))
                     ]
                     let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: resultMessage)
                     pluginResult?.setKeepCallbackAs(true)
@@ -323,9 +326,7 @@ import UserNotifications
         }
     }
     
-    @objc override func pluginInitialize() {
-        //UNUserNotificationCenter.current().delegate = self
-        
+    @objc override func pluginInitialize() {        
         let acceptAction = UNNotificationAction(identifier: "ACCEPT_ACTION",
                                                 title: "Accept",
                                                 options: [.foreground])
@@ -336,10 +337,10 @@ import UserNotifications
         let callCategory = UNNotificationCategory(identifier: "INCOMING_CALL",
                                                   actions: [acceptAction, declineAction],
                                                   intentIdentifiers: [],
-                                                  options: UNNotificationCategoryOptions(rawValue: 0))
+                                                  options: [.customDismissAction])
         
         // Register the notification categories.
-        UNUserNotificationCenter.current().setNotificationCategories([callCategory])
+        UNUserNotificationCenter.current().add(callCategory)
         
         NotificationCenter.default.addObserver(self, selector: #selector(self.receive(_:)), name: NSNotification.Name("AppNotificationAction"), object: nil)
     }
