@@ -14,6 +14,11 @@ On Android res/raw/ringtone.mp3 or res/raw/ringtone.ogg is used (filename is low
 ```
 cordova plugin add https://github.com/taracque/ionic-plugin-callkit.git
 ```
+Add the following to the bridging header
+```
+#import "UNUserNotificationCenter+APPLocalNotification.h"
+#import "UNNotificationRequest+APPLocalNotification.h"
+```
 
 ## How to use
 
