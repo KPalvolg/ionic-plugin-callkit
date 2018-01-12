@@ -276,7 +276,7 @@ import UIKit
                 else if (response?.actionIdentifier == "DECLINE_ACTION") {
                     let resultMessage = [
                         "callbackType": "callDecline",
-                        "uuid": response?.notification.request.identifier
+                        "uuid": String(describing: response?.notification.request.identifier.dropFirst(4))
                     ]
                     let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: resultMessage)
                     pluginResult?.setKeepCallbackAs(true)
@@ -292,7 +292,7 @@ import UIKit
                 else if (response?.actionIdentifier == UNNotificationDismissActionIdentifier) {
                     let resultMessage = [
                         "callbackType": "callDismiss",
-                        "uuid": response?.notification.request.identifier
+                        "uuid": String(describing: response?.notification.request.identifier.dropFirst(4))
                     ]
                     let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: resultMessage)
                     pluginResult?.setKeepCallbackAs(true)
@@ -308,7 +308,7 @@ import UIKit
                 else if (response?.actionIdentifier == UNNotificationDefaultActionIdentifier) {
                     let resultMessage = [
                         "callbackType": "callOpen",
-                        "uuid": response?.notification.request.identifier
+                        "uuid": String(describing: response?.notification.request.identifier.dropFirst(4))
                     ]
                     let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: resultMessage)
                     pluginResult?.setKeepCallbackAs(true)
