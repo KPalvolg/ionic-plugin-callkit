@@ -4,22 +4,40 @@ var CallKit = function() {
 	console.log('CallKit instanced');
 };
 
-CallKit.prototype.register = function(callChanged,audioSystem) {
-	var errorCallback = function() {};
-	var successCallback = function(obj) {
-		if (obj && obj.hasOwnProperty('callbackType')) {
-			if (obj.callbackType == "callChanged") {
-				/* this is a call changed callback! */
-				callChanged(obj);
-			} else if (obj.callbackType == "audioSystem") {
-				/* this is an audio system callback! */
-				audioSystem(obj.message);
-			}
-		} else {
-		}
-	};
+CallKit.prototype.register = function(callChanged,audioSystem,callAccept,callDecline,callDismiss,callOpen) {
+  var errorCallback = function() {};
+  var successCallback = function(obj) {
+    if (obj && obj.hasOwnProperty('callbackType')) {
+      switch (obj.callbackType) {
+        case "callChanged":
+          /* this is a call changed callback! */
+          callChanged(obj);
+          break;
+        case "audioSystem":
+          /* this is an audio system callback! */
+          audioSystem(obj.message);
+          break;
+        case "callAccept":
+          //Call accepted
+          callAccept(obj.uuid);
+          break;
+        case "callDecline":
+          //Call declined
+          callDecline(obj.uuid);
+          break;
+        case "callDismiss":
+          //Call notification dismissed
+          callDismiss(obj.uuid);
+          break;
+        case "callOpen":
+          //Call notification default action
+          callOpen(obj.uuid);
+          break;
+      }
+    }
+  };
 
-	exec(successCallback, errorCallback, 'CallKit', 'register' );
+  exec(successCallback, errorCallback, 'CallKit', 'register' );
 };
 
 CallKit.prototype.reportIncomingCall = function(name,params,onSuccess) {
