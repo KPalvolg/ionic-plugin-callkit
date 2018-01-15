@@ -26,6 +26,8 @@ import UIKit
     var callbackId: String?
     private var _callManager: AnyObject?
     private var _providerDelegate: AnyObject?
+    private var _activeCalls: [String]?
+    private var _timer: Timer?
     
     @available(iOS 10.0, *)
     var callManager: CDVCallManager? {
@@ -79,11 +81,16 @@ import UIKit
         NotificationCenter.default.removeObserver(self)
     }
     
-    func reportIncomingCall(_ command:CDVInvokedUrlCommand) {
+    @objc func reportIncomingCall(_ command:CDVInvokedUrlCommand) {
         var pluginResult = CDVPluginResult(
             status : CDVCommandStatus_ERROR
         )
-        
+        let application = UIApplication.shared
+        var bgTask = UIBackgroundTaskIdentifier()
+        bgTask = application.beginBackgroundTask(withName: "Incoming Call", expirationHandler: {
+            application.endBackgroundTask(bgTask)
+            bgTask = UIBackgroundTaskInvalid
+        })
         let uuid = UUID()
         let name = command.arguments[0] as? String ?? ""
         let hasVideo = command.arguments[1] as? Bool ?? false
@@ -98,24 +105,13 @@ import UIKit
         // localNotification.alertBody = name
         // UIApplication.shared.scheduleLocalNotification(localNotification)
         
-        
-        let content = UNMutableNotificationContent()
-        content.title = NSString.localizedUserNotificationString(forKey: hasVideo ? "Incoming Video Call" : "Incoming Call", arguments: nil)
-        content.body = name
-        content.sound = UNNotificationSound.default()
-        content.categoryIdentifier = "INCOMING_CALL"
-        
-        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
-        
-        let request = UNNotificationRequest(identifier: "call" + uuid.uuidString, content: content, trigger: trigger)
-        
-        let center = UNUserNotificationCenter.current()
-        center.add(request) { (error : Error?) in
-            if let theError = error {
-                print(theError.localizedDescription)
-            }
+        if (_activeCalls == nil) {
+            _activeCalls = []
         }
-        
+        _activeCalls?.append(uuid.uuidString)
+        let data = ["uuid": uuid.uuidString, "name": name, "hasVideo": hasVideo.description]
+        self.phoneRing(uuid: uuid.uuidString, name: name, hasVideo: hasVideo)
+        _timer = Timer.scheduledTimer(timeInterval: 3, target: self, selector: #selector(self.phoneRing(_:)), userInfo: data, repeats: true)
         
         pluginResult = CDVPluginResult(
             status: CDVCommandStatus_OK,
@@ -186,6 +182,9 @@ import UIKit
                 }
             }
             if (uuid != nil) {
+                self._activeCalls = self._activeCalls?.filter{$0 != uuid?.uuidString}
+                self._timer?.invalidate()
+                UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["call" + uuid!.uuidString])
                 UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: ["call" + uuid!.uuidString])
             }
         });
@@ -204,6 +203,9 @@ import UIKit
                 }
             }
             if (uuid != nil) {
+                self._activeCalls = self._activeCalls?.filter{$0 != uuid?.uuidString}
+                self._timer?.invalidate()
+                UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["call" + uuid!.uuidString])
                 UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: ["call" + uuid!.uuidString])
             }
         });
@@ -252,6 +254,40 @@ import UIKit
             print("RECEIVED AUDIO NOTIFICATION: \(notification)")
         } else {
             print("INVALID NOTIFICATION RECEIVED: \(notification)")
+        }
+    }
+    
+    @available(iOS 10.0, *)
+    @objc func phoneRing(uuid: String, name: String, hasVideo: Bool) {
+        let content = UNMutableNotificationContent()
+        content.title = NSString.localizedUserNotificationString(forKey: hasVideo ? "Incoming Video Call" : "Incoming Call", arguments: nil)
+        content.body = name
+        content.sound = UNNotificationSound.default()
+        content.categoryIdentifier = "INCOMING_CALL"
+        
+        let center = UNUserNotificationCenter.current()
+        
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 0.1, repeats: false)
+        
+        let request = UNNotificationRequest(identifier: "call" + uuid, content: content, trigger: trigger)
+        center.add(request) { (error : Error?) in
+            if let theError = error {
+                print(theError.localizedDescription)
+            }
+        }
+    }
+    
+    @objc @available(iOS 10.0, *)
+    func phoneRing(_ timer:Timer) {
+        let data = timer.userInfo as? [String: String]
+        if let uuid = data?["uuid"] as? String {
+            if self._activeCalls != nil && self._activeCalls!.contains(uuid) {
+                if let name = data?["name"] as? String {
+                    if let hasVideoString = data?["hasVideo"] as? String {
+                        self.phoneRing(uuid: uuid, name: name, hasVideo: hasVideoString == "true")
+                    }
+                }
+            }
         }
     }
     
@@ -325,11 +361,12 @@ import UIKit
                     self.callConnected(acceptCommand)
                 }
             }
-            
         }
     }
     
-    @objc override func pluginInitialize() {        
+    @objc override func pluginInitialize() {
+        //UNUserNotificationCenter.current().delegate = self
+        
         let acceptAction = UNNotificationAction(identifier: "ACCEPT_ACTION",
                                                 title: "Accept",
                                                 options: [.foreground])
@@ -346,5 +383,6 @@ import UIKit
         UNUserNotificationCenter.current().add(callCategory)
         
         NotificationCenter.default.addObserver(self, selector: #selector(self.receive(_:)), name: NSNotification.Name("AppNotificationAction"), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(self.receive(_:)), name: NSNotification.Name("AppNotificationTriggered"), object: nil)
     }
 }
