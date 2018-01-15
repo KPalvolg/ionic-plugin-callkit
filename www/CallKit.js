@@ -1,3 +1,5 @@
+// Modified by Mozzaz Inc.
+
 var exec = cordova.require('cordova/exec');
 
 var CallKit = function() {
