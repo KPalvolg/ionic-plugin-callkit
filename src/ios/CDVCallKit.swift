@@ -309,7 +309,7 @@ import UIKit
                     self.commandDelegate!.send(
                         pluginResult, callbackId: self.callbackId
                     )
-                    let acceptCommand = CDVInvokedUrlCommand.init(arguments: [response?.notification.request.identifier], callbackId: nil, className: nil, methodName: nil)!
+                    let acceptCommand = CDVInvokedUrlCommand.init(arguments: [resultMessage["uuid"]!], callbackId: nil, className: nil, methodName: nil)!
                     self.callConnected(acceptCommand)
                 }
                 else if (response?.actionIdentifier == "DECLINE_ACTION") {
@@ -325,7 +325,7 @@ import UIKit
                     self.commandDelegate!.send(
                         pluginResult, callbackId: self.callbackId
                     )
-                    let declineCommand = CDVInvokedUrlCommand.init(arguments: [response?.notification.request.identifier], callbackId: nil, className: nil, methodName: nil)!
+                    let declineCommand = CDVInvokedUrlCommand.init(arguments: [resultMessage["uuid"]!], callbackId: nil, className: nil, methodName: nil)!
                     self.endCall(declineCommand)
                 }
                 else if (response?.actionIdentifier == UNNotificationDismissActionIdentifier) {
@@ -341,7 +341,7 @@ import UIKit
                     self.commandDelegate!.send(
                         pluginResult, callbackId: self.callbackId
                     )
-                    let declineCommand = CDVInvokedUrlCommand.init(arguments: [response?.notification.request.identifier], callbackId: nil, className: nil, methodName: nil)!
+                    let declineCommand = CDVInvokedUrlCommand.init(arguments: [resultMessage["uuid"]!], callbackId: nil, className: nil, methodName: nil)!
                     self.endCall(declineCommand)
                 }
                 else if (response?.actionIdentifier == UNNotificationDefaultActionIdentifier) {
@@ -357,8 +357,6 @@ import UIKit
                     self.commandDelegate!.send(
                         pluginResult, callbackId: self.callbackId
                     )
-                    let acceptCommand = CDVInvokedUrlCommand.init(arguments: [response?.notification.request.identifier], callbackId: nil, className: nil, methodName: nil)!
-                    self.callConnected(acceptCommand)
                 }
             }
         }
@@ -372,7 +370,7 @@ import UIKit
                                                 options: [.foreground])
         let declineAction = UNNotificationAction(identifier: "DECLINE_ACTION",
                                                  title: "Decline",
-                                                 options: [.destructive,.foreground])
+                                                 options: [.destructive])
         
         let callCategory = UNNotificationCategory(identifier: "INCOMING_CALL",
                                                   actions: [acceptAction, declineAction],
@@ -386,3 +384,4 @@ import UIKit
         NotificationCenter.default.addObserver(self, selector: #selector(self.receive(_:)), name: NSNotification.Name("AppNotificationTriggered"), object: nil)
     }
 }
+
