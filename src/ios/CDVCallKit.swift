@@ -270,7 +270,7 @@ import AVFoundation
         let content = UNMutableNotificationContent()
         content.title = NSString.localizedUserNotificationString(forKey: hasVideo ? "Incoming Video Call" : "Incoming Call", arguments: nil)
         content.body = name
-        content.sound = UNNotificationSound.init(named: "Ringtone.caf")
+        content.sound = UNNotificationSound.init(named: "Blank.caf")
         content.categoryIdentifier = "INCOMING_CALL"
         
         let center = UNUserNotificationCenter.current()
@@ -283,7 +283,7 @@ import AVFoundation
             if self._sound != nil  {
                 AudioServicesDisposeSystemSoundID(self._sound!)
             }
-            var soundURL = Bundle.main.url(forResource: "Ringtone", withExtension: "caf", subdirectory: "Resources")
+            var soundURL = Bundle.main.url(forResource: "Ringtone", withExtension: "caf")
             if soundURL != nil {
                 var soundCFURL = CFBridgingRetain(soundURL) as! CFURL
                 var soundIDptr = UnsafeMutableRawPointer.allocate(bytes: 4, alignedTo: 1).bindMemory(to: SystemSoundID.self, capacity: 1)
