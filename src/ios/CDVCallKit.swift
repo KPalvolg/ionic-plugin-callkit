@@ -20,6 +20,7 @@
  Modified by Mozzaz Inc.
  */
 import UIKit
+import AVFoundation
 
 @available(iOS 10.0, *)
 @objc(CDVCallKit) class CDVCallKit : CDVPlugin {
@@ -28,6 +29,7 @@ import UIKit
     private var _providerDelegate: AnyObject?
     private var _activeCalls: [String]?
     private var _timer: Timer?
+    private var _sound: SystemSoundID?
     
     @available(iOS 10.0, *)
     var callManager: CDVCallManager? {
@@ -186,6 +188,9 @@ import UIKit
                 self._timer?.invalidate()
                 UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["call" + uuid!.uuidString])
                 UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: ["call" + uuid!.uuidString])
+                if self._sound != nil  {
+                    AudioServicesDisposeSystemSoundID(self._sound!)
+                }
             }
         });
     }
@@ -207,6 +212,9 @@ import UIKit
                 self._timer?.invalidate()
                 UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["call" + uuid!.uuidString])
                 UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: ["call" + uuid!.uuidString])
+                if self._sound != nil  {
+                    AudioServicesDisposeSystemSoundID(self._sound!)
+                }
             }
         });
     }
@@ -262,7 +270,7 @@ import UIKit
         let content = UNMutableNotificationContent()
         content.title = NSString.localizedUserNotificationString(forKey: hasVideo ? "Incoming Video Call" : "Incoming Call", arguments: nil)
         content.body = name
-        content.sound = UNNotificationSound.default()
+        content.sound = UNNotificationSound.init(named: "Ringtone.caf")
         content.categoryIdentifier = "INCOMING_CALL"
         
         let center = UNUserNotificationCenter.current()
@@ -271,6 +279,19 @@ import UIKit
         
         let request = UNNotificationRequest(identifier: "call" + uuid, content: content, trigger: trigger)
         center.add(request) { (error : Error?) in
+            print("call notification")
+            if self._sound != nil  {
+                AudioServicesDisposeSystemSoundID(self._sound!)
+            }
+            var soundURL = Bundle.main.url(forResource: "Ringtone", withExtension: "caf", subdirectory: "Resources")
+            if soundURL != nil {
+                var soundCFURL = CFBridgingRetain(soundURL) as! CFURL
+                var soundIDptr = UnsafeMutableRawPointer.allocate(bytes: 4, alignedTo: 1).bindMemory(to: SystemSoundID.self, capacity: 1)
+                AudioServicesCreateSystemSoundID(soundCFURL, soundIDptr)
+                self._sound = soundIDptr.pointee
+                soundIDptr.deallocate(capacity: 1)
+                AudioServicesPlaySystemSound(self._sound!)
+            }
             if let theError = error {
                 print(theError.localizedDescription)
             }
