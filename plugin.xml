@@ -78,7 +78,7 @@
 		<source-file src="src/ios/CDVCall.swift" />
 		<source-file src="src/ios/CDVCallManager.swift" />
 
-		<resource-file src="src/ios/audio/Blank.caf" target="Library/Sounds/Blank.caf">
+		<resource-file src="src/ios/audio/Blank.caf" target="Library/Sounds/Blank.caf"/>
 
 		<framework src="CallKit.framework" />
 	</platform>
