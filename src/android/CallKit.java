@@ -139,7 +139,7 @@ public class CallKit extends CordovaPlugin {
         ringtone = RingtoneManager.getRingtone(ctx, ringtoneUri);
         if (Build.VERSION.SDK_INT >= 21) {
             AudioAttributes aa = new AudioAttributes.Builder()
-                    .setFlags(AudioAttributes.USAGE_NOTIFICATION_RINGTONE | AudioAttributes.USAGE_NOTIFICATION_COMMUNICATION_REQUEST)
+                    .setUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE)
                     .build();
             ringtone.setAudioAttributes(aa);
         } else {
