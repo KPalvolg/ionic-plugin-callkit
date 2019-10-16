@@ -88,10 +88,10 @@ import AVFoundation
             status : CDVCommandStatus_ERROR
         )
         let application = UIApplication.shared
-        var bgTask = UIBackgroundTaskIdentifier()
+        var bgTask = UIBackgroundTaskIdentifier(rawValue: 1)
         bgTask = application.beginBackgroundTask(withName: "Incoming Call", expirationHandler: {
             application.endBackgroundTask(bgTask)
-            bgTask = UIBackgroundTaskInvalid
+            bgTask = UIBackgroundTaskIdentifier.invalid
         })
         let uuid = UUID()
         let name = command.arguments[0] as? String ?? ""
@@ -270,7 +270,7 @@ import AVFoundation
         let content = UNMutableNotificationContent()
         content.title = NSString.localizedUserNotificationString(forKey: hasVideo ? "Incoming Video Call" : "Incoming Call", arguments: nil)
         content.body = name
-        content.sound = UNNotificationSound.init(named: "Blank.caf")
+        content.sound = UNNotificationSound.init(named: UNNotificationSoundName(rawValue: "Blank.caf"))
         content.categoryIdentifier = "INCOMING_CALL"
         
         let center = UNUserNotificationCenter.current()
