@@ -1,6 +1,6 @@
 /*
-	Abstract:
-	CallKit provider delegate class, which conforms to CXProviderDelegate protocol
+    Abstract:
+    CallKit provider delegate class, which conforms to CXProviderDelegate protocol
  */
 
 import Foundation
@@ -35,7 +35,7 @@ final class CDVProviderDelegate: NSObject, CXProviderDelegate {
         providerConfiguration.supportedHandleTypes = [.generic]
 
         if let iconMaskImage = UIImage(named: "callkit-icon") {
-            providerConfiguration.iconTemplateImageData = UIImagePNGRepresentation(iconMaskImage)
+            providerConfiguration.iconTemplateImageData = iconMaskImage.pngData()
         }
 
         providerConfiguration.ringtoneSound = "Ringtone.caf"
@@ -145,8 +145,8 @@ final class CDVProviderDelegate: NSObject, CXProviderDelegate {
         // see https://developer.apple.com/reference/avfoundation/avaudiosession
         let session = AVAudioSession.sharedInstance()
         do {
-            try session.setCategory(AVAudioSessionCategoryPlayAndRecord)
-            try session.setMode(AVAudioSessionModeVoiceChat)
+            try session.setCategory(AVAudioSession.Category.playAndRecord)
+            try session.setMode(AVAudioSession.Mode.voiceChat)
         } catch (let error) {
             print("Error while configuring audio session: \(error)")
         }
